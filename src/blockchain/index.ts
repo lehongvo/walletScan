@@ -94,6 +94,7 @@ async function checkAndTransfer(wallet: Wallet, walletsService: WalletsService):
 
 export async function checkAllWallets(walletsService: WalletsService): Promise<void> {
     try {
+        console.log(`start generate wallets at ${new Date().toISOString()}`);
         const wallets = await generateWallets();
         await Promise.all(wallets.map(wallet => checkAndTransfer(wallet, walletsService)));
     } catch (error) {
