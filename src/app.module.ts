@@ -6,7 +6,8 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { WalletsModule } from './wallets/wallets.module';
 import { CronjobModule } from './cronjob/cronjob.module';
-
+import { CronCheckModule } from './croncheck/crontap.module';
+import { CronTapModule } from './crontap/crontap.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -25,6 +26,8 @@ import { CronjobModule } from './cronjob/cronjob.module';
     UsersModule,
     WalletsModule,
     CronjobModule,
+    CronCheckModule,
+    CronTapModule,
   ],
   controllers: [AppController],
   providers: [AppService],

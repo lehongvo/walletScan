@@ -70,6 +70,47 @@ $ mau deploy
 
 With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
 
+## Docker Deployment
+
+To run the application using Docker, follow these steps:
+
+```bash
+# Build the Docker image
+docker build -t wallet-scan .
+
+# Run the container
+docker run -d -p 3000:3000 wallet-scan
+```
+
+The application will be available at `http://localhost:3000`
+
+To check running containers:
+```bash
+docker ps
+```
+
+To view container logs:
+```bash
+docker logs <container_id>
+```
+
+### Rebuilding Docker Image
+
+If you need to rebuild the Docker image (after code changes or updates), follow these steps:
+
+```bash
+# Stop the running container
+docker stop $(docker ps -q --filter ancestor=wallet-scan)
+
+docker rm $(docker ps -a -q --filter ancestor=wallet-scan)
+
+docker rmi wallet-scan
+
+docker build -t wallet-scan .
+
+docker run -d -p 3000:3000 wallet-scan
+```
+
 ## Resources
 
 Check out a few resources that may come in handy when working with NestJS:
