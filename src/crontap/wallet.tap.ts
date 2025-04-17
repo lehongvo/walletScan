@@ -17,32 +17,10 @@ export class WalletTapService implements OnModuleInit {
         await Promise.all([
           checkAllWallets(this.walletsService),
           checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
-          checkAllWallets(this.walletsService),
         ]);
       } catch (error) {
         console.error('Error in wallet scanning:', error);
       }
-    }); // Run every 200ms
+    }, 200); // Run every 200ms
   }
-} 
+}

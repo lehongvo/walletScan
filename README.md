@@ -94,6 +94,50 @@ To view container logs:
 docker logs <container_id>
 ```
 
+### Prevent Mac from Sleeping During Docker Operation (Mac Mini M1)
+
+To prevent your Mac Mini M1 from going to sleep or locking the screen while the Docker container is running, use this approach:
+
+```bash
+# Run this in Terminal to start Docker and prevent sleep
+docker run -d -p 3000:3000 wallet-scan && caffeinate -dis -w $(docker ps -q --filter ancestor=wallet-scan)
+```
+
+This command:
+1. Starts the wallet-scan container in detached mode
+2. Uses the `caffeinate` tool to prevent sleep until the container stops
+   - `-d` prevents display sleep
+   - `-i` prevents system idle sleep
+   - `-s` prevents system sleep when plugged into power
+   - `-w` waits for a specific process ID (in this case, ties to the Docker container)
+
+To stop the container and allow normal sleep behavior:
+```bash
+docker stop $(docker ps -q --filter ancestor=wallet-scan)
+```
+
+Alternatively, you can create a simple shell script to manage this process:
+
+```bash
+#!/bin/bash
+# save as run-wallet-scan.sh and make executable with: chmod +x run-wallet-scan.sh
+
+# Start the container
+container_id=$(docker run -d -p 3000:3000 wallet-scan)
+
+echo "Container started with ID: $container_id"
+echo "Preventing Mac from sleeping while container runs..."
+echo "Press Ctrl+C to stop container and allow sleep"
+
+# Prevent sleep until script is interrupted
+caffeinate -dis &
+caffeinate_pid=$!
+
+# Wait for user to press Ctrl+C
+trap "docker stop $container_id; kill $caffeinate_pid; echo 'Container stopped, sleep allowed'; exit" INT
+while true; do sleep 1; done
+```
+
 ### Rebuilding Docker Image
 
 If you need to rebuild the Docker image (after code changes or updates), follow these steps:

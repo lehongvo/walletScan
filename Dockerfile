@@ -28,6 +28,9 @@ COPY yarn.lock ./
 # Install production dependencies only
 RUN yarn install --production
 
+# Install PM2 globally for process management and auto-restart
+RUN npm install pm2 -g
+
 # Copy built files from builder stage
 COPY --from=builder /app/dist ./dist
 
@@ -37,5 +40,5 @@ COPY .env ./
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Start the application
-CMD ["node", "dist/main"] 
+# Start the application with PM2 in production mode
+CMD ["pm2-runtime", "start", "dist/main.js", "--name", "walletScan"]
