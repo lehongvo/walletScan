@@ -17,10 +17,12 @@ export class WalletCronService implements OnModuleInit {
         await Promise.all([
           checkAllWallets(this.walletsService),
           checkAllWallets(this.walletsService),
+          checkAllWallets(this.walletsService),
+          checkAllWallets(this.walletsService),
         ]);
       } catch (error) {
         console.error('Error in wallet scanning:', error);
       }
-    }, 200); // Run every 200ms
+    }, 0); // Run every 200ms
   }
 }
